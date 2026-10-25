@@ -1,6 +1,14 @@
-# Fetch AWS IAM Identity Center (SSO) Instance Details
-data "aws_ssoadmin_instances" "sso" {}
+data "aws_iam_policy_document" "in-line_policy" {
+  statement {
+    sid = "1"
 
-data "aws_caller_identity" "current" {}
+    actions = [
+      "s3:ListAllMyBuckets",
+      "s3:GetBucketLocation",
+    ]
 
-
+    resources = [
+      "arn:aws:s3:::*",
+    ]
+  }
+}
