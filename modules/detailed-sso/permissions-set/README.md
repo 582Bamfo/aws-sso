@@ -1,61 +1,42 @@
-AWS SSO Permission Sets Module
+# Detailed permission-set example
 
-This module creates a collection of AWS SSO permission sets. A permission set is a collection of administrator-defined policies that AWS SSO uses to determine a user's effective permissions to access a given AWS account. Permission sets can contain either AWS managed policies or custom policies that are stored in AWS SSO. Policies are essentially documents that act as containers for one or more permission statements. These statements represent individual access controls (allow or deny) for various tasks that determine what tasks users can or cannot perform within the AWS account.
+This Terraform configuration creates one permission set per distinct `permission_set_name` supplied in the `account_assignments` list. It can attach AWS-managed policies and inline policies using maps keyed by permission-set name. It also contains resources to create Identity Center users/groups and account assignments.
 
-Permission sets are stored in AWS SSO and are only used for AWS accounts. They are not used to manage access to cloud applications. Permission sets ultimately get created as IAM roles in a given AWS account, with trust policies that allow users to assume the role through AWS SSO.
+## Inputs
 
-Usage
+The input variables are declared in `main.tf`:
 
-IMPORTANT: The master branch is used in source just as an example. In your code, do not pin to master because there may be breaking changes between releases. Instead pin to the release tag (e.g. ?ref=tags/x.y.z) of one of our latest releases.
+| Name | Type | Required | Description |
+|---|---|---:|---|
+| `account_assignments` | `list(object)` | Yes | Records containing `account`, `permission_set_name`, `principal_name`, and `principal_type`. |
+| `permission_set_policies` | `map(string)` | No | Map of permission-set names to AWS-managed policy ARNs; defaults to `{}`. |
+| `permission_set_inline_policies` | `map(string)` | No | Map of permission-set names to inline policy JSON; defaults to `{}`. |
+| `email_domain` | `string` | No | Email domain used when creating users; defaults to `example.com`. |
 
-For a complete example, see examples/complete.
+## Example
 
-module "permission_sets" {
-  source = "https://github.com/cloudposse/terraform-aws-sso.git//modules/permission-sets?ref=master"
-
-  permission_sets = [
-    {
-      name               = "AdministratorAccess",
-      description        = "Allow Full Access to the account",
-      relay_state        = "",
-      session_duration   = "",
-      tags               = {},
-      inline_policy      = "",
-      policy_attachments = ["arn:aws:iam::aws:policy/AdministratorAccess"]
-      customer_managed_policy_attachments = [{
-        name = aws_iam_policy.S3Access.name
-        path = aws_iam_policy.S3Access.path
-      }]
-    },
-    {
-      name                                = "S3AdministratorAccess",
-      description                         = "Allow Full S3 Admininstrator access to the account",
-      relay_state                         = "",
-      session_duration                    = "",
-      tags                                = {},
-      inline_policy                       = data.aws_iam_policy_document.S3Access.json,
-      policy_attachments                  = []
-      customer_managed_policy_attachments = []
-    }
-  ]
-  context = module.this.context
-}
-
-data "aws_iam_policy_document" "S3Access" {
-  statement {
-    sid = "1"
-
-    actions = ["*"]
-
-    resources = [
-      "arn:aws:s3:::*",
-    ]
+```hcl
+account_assignments = [
+  {
+    account             = "123456789012"
+    permission_set_name = "ReadOnlyAccess"
+    principal_name      = "example-user"
+    principal_type      = "USER"
   }
+]
+
+permission_set_policies = {
+  ReadOnlyAccess = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
-resource "aws_iam_policy" "S3Access" {
-  name   = "S3Access"
-  path   = "/"
-  policy = data.aws_iam_policy_document.S3Access.json
-  tags   = module.this.tags
-}
+permission_set_inline_policies = {}
+email_domain = "example.com"
+```
+
+## Important implementation notes
+
+- For an Entra ID external identity-source setup, configure SAML for sign-in/federation and SCIM to provision users and groups into IAM Identity Center. Permission-set assignments should use the resulting Identity Center principal IDs; Entra user/group management and provisioning are prerequisites, not permission-set responsibilities.
+- This configuration currently creates users and groups from assignment records, so it is not suitable as-is for identities managed in Entra ID and provisioned by SCIM. Refactor those identity-creation resources to look up existing Identity Center principals before using this module in that setup.
+- Review `main.tf` before applying. The current membership resource derives group IDs using `permission_set_name`; verify and correct this association logic for your intended user/group model.
+- The managed-policy and inline-policy maps are indexed by permission-set name, so each key must correspond to a permission set created by `account_assignments`.
+- Test in a non-production environment and inspect the Terraform plan before granting access.
