@@ -12,3 +12,27 @@ data "aws_iam_policy_document" "in-line_policy" {
     ]
   }
 }
+
+
+data "aws_iam_policy_document" "instance_inline_policy" {
+  statement {
+    sid = "1"
+
+    actions = [
+      "ec2:DescribeInstances",
+      "ec2:DescribeVolumes",
+      "ec2:DescribeSnapshots",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeKeyPairs",
+      "ec2:DescribeNetworkInterfaces",
+
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+
+data "aws_iam_policy_document" "simplydantech" {}

@@ -10,6 +10,8 @@ module "developer_access" {
 
   permission_set_names          = "DeveloperAccess"
   customer_managed_policy_names = ["cloud-vm-access", "devops-readonly"]
+  managed_policy_arns           = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
+  inline_policy_document        = data.aws_iam_policy_document.instance_inline_policy.json
   session_duration              = "PT2H"
 
   principal_id   = "identity-center-principal-id"
@@ -29,7 +31,9 @@ module "developer_access" {
 | Name | Type | Required | Description |
 |---|---|---:|---|
 | `permission_set_names` | `string` | Yes | Permission-set name. |
-| `customer_managed_policy_names` | `set(string)` | Yes | Names of existing customer-managed IAM policies to attach. The current resource configuration uses the root path (`/`). |
+| `customer_managed_policy_names` | `set(string)` | No | Optional names of existing customer-managed IAM policies to attach. Omit or set to `null` for no customer-managed attachments. The current resource configuration uses the root path (`/`). |
+| `managed_policy_arns` | `set(string)` | No | Optional ARNs of AWS-managed IAM policies to attach. Omit or set to `null` for no AWS-managed attachments. |
+| `inline_policy_document` | `string` | No | Optional JSON policy document to attach inline; defaults to `null` (no inline policy). |
 | `principal_id` | `string` | Yes | IAM Identity Center ID of the user or group, not its display name. |
 | `principal_type` | `string` | Yes | Principal type, normally `USER` or `GROUP`. |
 | `target_id` | `string` | Yes | 12-digit AWS account ID. |

@@ -5,20 +5,36 @@ variable "permission_set_names" {
 }
 
 variable "customer_managed_policy_names" {
-  description = "Names of existing customer-managed IAM policies to attach to the permission set."
+  description = "Optional names of existing customer-managed IAM policies to attach to the permission set."
   type        = set(string)
+  default     = null
+  nullable    = true
+}
+
+variable "managed_policy_arns" {
+  description = "Optional ARNs of AWS-managed IAM policies to attach to the permission set."
+  type        = set(string)
+  default     = null
+  nullable    = true
+}
+
+variable "inline_policy_document" {
+  description = "Optional JSON IAM policy document to attach inline to the permission set."
+  type        = string
+  default     = null
+  nullable    = true
 }
 
 variable "session_duration" {
   description = "The duration of the SSO session for the permission set."
   type        = string
-  default     = "PT1H"  # Default to 1 hour
+  default     = "PT1H" # Default to 1 hour
 }
 
 variable "principal_type" {
   description = "The type of principal (USER or GROUP) for the account assignment."
   type        = string
-  
+
 }
 
 variable "target_id" {
@@ -40,10 +56,10 @@ variable "principal_id" {
 variable "tags" {
   description = "A map of tags to assign to the permission set."
   type        = map(string)
-  default     = {
-    owner       = "SimplyDanTech"
-    managed_by = "Terraform"
-    service    = "AWS SSO"
+  default = {
+    owner        = "SimplyDanTech"
+    managed_by   = "Terraform"
+    service      = "AWS SSO"
     organization = "SimplyDanTech"
   }
 }
