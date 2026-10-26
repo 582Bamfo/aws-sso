@@ -36,3 +36,29 @@ data "aws_iam_policy_document" "instance_inline_policy" {
 
 
 data "aws_iam_policy_document" "simplydantech" {}
+
+data "aws_iam_policy_document" "ssm_remote_access" {
+  statement {
+    sid = "StartSession"
+    actions = [
+      "ssm:StartSession",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "SendCommand"
+    actions = [
+      "ssm:SendCommand",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "TerminateSession"
+    actions = [
+      "ssm:TerminateSession",
+    ]
+    resources = ["*"]
+  }
+}

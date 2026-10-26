@@ -1,12 +1,12 @@
-# Customer-managed policy permission set
+# Permission set with policy options
 
-This module creates a single IAM Identity Center permission set, attaches each named customer-managed IAM policy, and assigns the permission set to a user or group in an AWS account.
+This module creates an IAM Identity Center permission set, optionally attaches customer-managed policies, AWS-managed policies, and an inline policy, and assigns the permission set to a user or group in an AWS account. The root configuration also creates a customer-managed SSM policy and attaches it to `DeveloperAccess`.
 
 ## Example
 
 ```hcl
 module "developer_access" {
-  source = "./modules/permission-sets/permission-set-customer-managed"
+  source = "./modules/permission-sets/permission-set-options-for-all-policies"
 
   permission_set_names          = "DeveloperAccess"
   customer_managed_policy_names = ["cloud-vm-access", "devops-readonly"]
@@ -48,3 +48,5 @@ module "developer_access" {
 - Each policy must exist in the AWS account with the supplied name and root path. Customer-managed policy references must also be available in the accounts where the permission set is provisioned.
 - The module selects the first Identity Center instance returned in the configured region.
 - Review the Terraform plan to ensure that the permission set and assignment grant only the intended access.
+
+The root configuration's `aws_iam_policy.ssm_remote_access` uses the `name_prefix` argument and the `aws_iam_policy_document.ssm_remote_access` data source. It grants `ssm:StartSession`, `ssm:SendCommand`, and `ssm:TerminateSession` on `*`; narrow the resources to the intended managed instances and SSM documents before production use. The generated customer-managed policy must exist in every AWS account where the permission set is provisioned. The root provider creates it only in the account selected by its credentials.

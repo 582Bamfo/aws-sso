@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 module "permission_sets" {
-  source                        = "./modules/permission-sets/permission-set-customer-managed"
+  source                        = "./modules/permission-sets/permission-set-options-for-all-policies"
   permission_set_names          = "DeveloperAccess"
   customer_managed_policy_names = ["cloud-vm-access", "cyber-sec-role-policy", "devops-readonly"]
   managed_policy_arns           = ["arn:aws:iam::aws:policy/ReadOnlyAccess"]
@@ -22,8 +22,10 @@ module "permission_sets" {
 }
 
 
+
+
 module "qa_permission_sets" {
-  source                        = "./modules/permission-sets/permission-set-customer-managed"
+  source                        = "./modules/permission-sets/permission-set-options-for-all-policies"
   permission_set_names          = "QAAccess"
   customer_managed_policy_names = ["dev-rds-policy-qa", "free-cloud-course-iam-perm"]
   session_duration              = "PT1H" # 1-hour session
@@ -57,6 +59,32 @@ module "inline-permission-set" {
   }
 }
 
+
+
+#test policy creation and attch to existing permission set
+resource "aws_iam_policy" "ssm_remote_access" {
+  name = "DeveloperSSMRemoteAccess"
+  path        = "/"
+  description = "Allows Systems Manager sessions, commands, and session termination."
+  policy      = data.aws_iam_policy_document.ssm_remote_access.json
+
+  tags = {
+    owner      = "SimplyDanTech"
+    managed_by = "Terraform"
+    purpose    = "DeveloperAccess SSM"
+  }
+}
+
+resource "aws_ssoadmin_customer_managed_policy_attachment" "developer_ssm_remote_access" {
+  instance_arn       = module.permission_sets.instance_arn
+  permission_set_arn = module.permission_sets.permission_set_arn
+
+  customer_managed_policy_reference {
+    name = aws_iam_policy.ssm_remote_access.name
+    path = aws_iam_policy.ssm_remote_access.path
+  }
+}
+
 output "developer_access_permission_set_arn" {
   description = "ARN of the DeveloperAccess permission set."
   value       = module.permission_sets.permission_set_arn
@@ -65,4 +93,9 @@ output "developer_access_permission_set_arn" {
 output "developer_access_account_assignment_id" {
   description = "ID of the DeveloperAccess account assignment."
   value       = module.permission_sets.account_assignment_id
+}
+
+output "developer_ssm_policy_arn" {
+  description = "ARN of the customer-managed SSM access policy created for DeveloperAccess."
+  value       = aws_iam_policy.ssm_remote_access.arn
 }

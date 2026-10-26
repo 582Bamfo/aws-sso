@@ -15,7 +15,7 @@ output "instance_arn" {
 
 output "account_assignment_id" {
   description = "ID of the account assignment created for the configured principal and account."
-  value       = aws_ssoadmin_account_assignment.example.id
+  value       = aws_ssoadmin_account_assignment.account_assignment.id
 }
 
 output "customer_managed_policy_names" {
